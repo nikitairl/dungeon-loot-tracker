@@ -61,6 +61,7 @@ end
 
 function DLT.ClearLootList()
     lootList = {}
+    DLT_SavedData = {}
     if lootFrame and lootFrame:IsShown() then
         UpdateLootFrame()
     end
@@ -188,7 +189,7 @@ local function CreateEJIcon()
         else
             if not lootFrame then
                 lootFrame = CreateFrame("Frame", "DLT_LootFrame", UIParent, "BackdropTemplate")
-                lootFrame:SetSize(300, 300)
+                lootFrame:SetSize(512, 256)
                 lootFrame:SetPoint("CENTER")
                 lootFrame:SetBackdrop({
                     bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
