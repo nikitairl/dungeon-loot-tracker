@@ -121,6 +121,14 @@ function UpdateLootFrame()
     if not lootFrame then return end
     if not lootFrame.buttons then lootFrame.buttons = {} end
 
+    -- Очищаем все существующие элементы
+    if lootFrame.scrollChild then
+        for k, v in pairs(lootFrame.scrollChild) do
+            if type(v) == "table" and v.Hide then
+                v:Hide()
+            end
+        end
+    end
 
     -- Сортируем предметы по dungeon/zone
     local groupedLoot = {}
@@ -131,6 +139,14 @@ function UpdateLootFrame()
         end
         table.insert(groupedLoot[dungeon], loot)
     end
+
+    -- Если нет предметов, выходим
+    if not next(groupedLoot) then
+        lootFrame.scrollChild:SetHeight(1)
+        lootFrame.scrollChild:SetWidth(260)
+        return
+    end
+
     -- Начальная позиция
     local yOffset = 0
     local groupSpacing = 18 -- отступ между группами
@@ -156,7 +172,7 @@ function UpdateLootFrame()
             local btn = lootFrame.scrollChild[loot.itemID]
             if not btn then
                 btn = CreateFrame("Button", nil, lootFrame.scrollChild)
-                btn:SetSize(260, 30)
+                btn:SetSize(320, 30)
                 btn:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
 
                 btn.icon = btn:CreateTexture(nil, "ARTWORK")
