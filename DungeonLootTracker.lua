@@ -521,17 +521,40 @@ SlashCmdList["DLT"] = function(msg)
         DLT.ClearLootList()
         print("|cFF33FF99DLT|r: list cleared")
 
+    elseif cmd == "info" or cmd == "help" then
+        print("|cFF33FF99Dungeon Loot Tracker|r - Help")
+        print(" ")
+        print("|cFFFFD700Available Commands:|r")
+        print("  |cFF33FF99/dlt <item>|r          - Toggle item (add/remove)")
+        print("  |cFF33FF99/dlt add <item>|r      - Add item to list")
+        print("  |cFF33FF99/dlt remove <item>|r   - Remove item from list")
+        print("  |cFF33FF99/dlt list|r            - Show your loot list")
+        print("  |cFF33FF99/dlt clear|r           - Clear entire list")
+        print("  |cFF33FF99/dlt info|r            - Show this help")
+        print(" ")
+        print("|cFFFFD700Usage Examples:|r")
+        print("  |cFF33FF99/dlt 12345|r           - Toggle item by ID")
+        print("  |cFF33FF99/dlt item:12345|r      - Toggle item by link")
+        print("  |cFF33FF99/dlt add 12345|r       - Add item")
+        print(" ")
+        print("|cFFFFD700How to Use:|r")
+        print("• Use the 'Add Item' button in UI to capture items")
+        print("• Items are saved per character")
+        print("• Toggle command automatically adds or removes items")
+
     else
         -- Toggle режим - либо команда не распознана, либо это предмет
         local itemInput = msg
         if itemInput == "" then
             print("|cFF33FF99DLT|r: usage: /dlt <itemLink or itemID> - toggle item")
+            print("|cFF33FF99DLT|r: use /dlt info for help")
             return
         end
 
         local itemID = ParseItemID(itemInput)
         if not itemID then
             print("|cFF33FF99DLT|r: please provide a valid itemLink or numeric itemID")
+            print("|cFF33FF99DLT|r: use /dlt info for help")
             return
         end
 
