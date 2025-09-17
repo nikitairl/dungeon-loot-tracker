@@ -217,7 +217,7 @@ function UpdateLootFrame()
         title:SetPoint("TOP", lootFrame.scrollChild, "TOP", 16, -yOffset)
         title:Show()
         yOffset = yOffset + 28 -- высота заголовка
-
+        
         -- Создаем кнопки предметов в группе
         for _, loot in ipairs(items) do
             local btn = lootFrame.scrollChild[loot.itemID]
@@ -349,16 +349,15 @@ local function CreateEJIcon()
                     edgeSize = 32,
                     insets = { left = 11, right = 12, top = 12, bottom = 11 }
                 })
-                
                 lootFrame.overlay = lootFrame:CreateTexture(nil, "OVERLAY")
                 lootFrame.overlay:SetTexture("Interface\\ChatFrame\\ChatFrameBackground")
-                lootFrame.overlay:SetVertexColor(0, 0, 0, 0.4) -- черный с 40% прозрачностью
+                lootFrame.overlay:SetVertexColor(0, 0, 0, 0.2) -- черный с 40% прозрачностью
                 lootFrame.overlay:SetAllPoints()
                 ---lootFrame:SetBackdropColor(0, 0, 0, 0.6)
 
                 -- Создаем фрейм для заголовка с фоном
                 lootFrame.titleFrame = CreateFrame("Frame", nil, lootFrame)
-                lootFrame.titleFrame:SetSize(340, 30)
+                lootFrame.titleFrame:SetSize(340, 42)
                 lootFrame.titleFrame:SetPoint("TOP", lootFrame, "TOP", 0, -12)
 
                 -- Фон заголовка
@@ -374,7 +373,7 @@ local function CreateEJIcon()
 
                 -- ScrollFrame
                 lootFrame.scrollFrame = CreateFrame("ScrollFrame", nil, lootFrame, "UIPanelScrollFrameTemplate")
-                lootFrame.scrollFrame:SetPoint("TOP", lootFrame, "TOP", 0, -48)
+                lootFrame.scrollFrame:SetPoint("TOP", lootFrame, "TOP", 0, -64)
                 lootFrame.scrollFrame:SetPoint("BOTTOMRIGHT", lootFrame, "BOTTOMRIGHT", -35, 15)
 
                 lootFrame.scrollChild = CreateFrame("Frame", nil, lootFrame.scrollFrame)
