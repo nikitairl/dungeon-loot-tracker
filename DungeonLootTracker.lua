@@ -204,7 +204,7 @@ local function CreateEJIcon()
             if not lootFrame then
                 -- Создаем окно списка
                 lootFrame = CreateFrame("Frame", "DLT_LootFrame", UIParent, "BackdropTemplate")
-                lootFrame:SetSize(400, 400)
+                lootFrame:SetSize(400, 496)
 
                 -- Расположение справа от EJ
                 if EncounterJournal:IsShown() then
@@ -214,22 +214,24 @@ local function CreateEJIcon()
                 end
 
                 lootFrame:SetBackdrop({
-                    bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+                    bgFile = "Interface\\AddOns\\DungeonLootTracker\\textures\\bg3",
                     edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
-                    tile = true,
-                    tileSize = 32,
+                    tile = true,       -- включаем плитку
+                    tileSize = 640,    -- увеличиваем размер плитки, чтобы фон был больше
                     edgeSize = 32,
                     insets = { left = 11, right = 12, top = 12, bottom = 11 }
                 })
 
+
+
                 -- Заголовок
                 lootFrame.title = lootFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-                lootFrame.title:SetPoint("TOP", lootFrame, "TOP", 0, -10)
+                lootFrame.title:SetPoint("TOP", lootFrame, "TOP", 0, -18)
                 lootFrame.title:SetText("Good luck, Champion")
 
                 -- ScrollFrame
                 lootFrame.scrollFrame = CreateFrame("ScrollFrame", nil, lootFrame, "UIPanelScrollFrameTemplate")
-                lootFrame.scrollFrame:SetPoint("TOPLEFT", lootFrame, "TOPLEFT", 15, -40)
+                lootFrame.scrollFrame:SetPoint("TOPLEFT", lootFrame, "TOPLEFT", 15, -48)
                 lootFrame.scrollFrame:SetPoint("BOTTOMRIGHT", lootFrame, "BOTTOMRIGHT", -35, 15)
 
                 lootFrame.scrollChild = CreateFrame("Frame", nil, lootFrame.scrollFrame)
@@ -269,6 +271,13 @@ f:SetScript("OnEvent", function(self, event, arg1)
     end
 end)
 
+if EncounterJournal then
+    EncounterJournal:HookScript("OnHide", function()
+        if lootFrame and lootFrame:IsShown() then
+            lootFrame:Hide()
+        end
+    end)
+end
 
 -- ======================
 -- Slash-команды
