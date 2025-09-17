@@ -43,13 +43,12 @@ end
 function DLT.AddLootItem(itemID, dungeon)
     for _, loot in ipairs(lootList) do
         if loot.itemID == itemID then
-            print("|cFF33FF99DLT|r: предмет уже есть в списке!")
+            print("|cFF33FF99DLT|r: item " .. itemID .. " is already in the list!")
             return
         end
     end
 
     table.insert(lootList, { itemID = itemID, dungeon = dungeon })
-    print("|cFF33FF99DLT|r: добавлен предмет " .. itemID .. " (" .. dungeon .. ")")
     if lootFrame and lootFrame:IsShown() then
         UpdateLootFrame()
     end
@@ -59,7 +58,7 @@ end
 -- Popup для добавления предмета
 -- Popup для добавления предмета
 StaticPopupDialogs["DLT_ADD_ITEM"] = {
-    text = "Enter Item ID or Item Link:",
+    text = "Enter Item ID:\n|cFFFFD700Note: Use /dlt <itemlink> for item links|r",
     button1 = "Add",
     button2 = "Cancel",
     hasEditBox = true,
@@ -90,10 +89,10 @@ StaticPopupDialogs["DLT_ADD_ITEM"] = {
     end,
     OnShow = function(self)
         self.EditBox:SetFocus()
-        self.EditBox:SetText("")  -- Очищаем поле при открытии
+        self.EditBox:SetText("")
     end,
     OnHide = function(self)
-        self.EditBox:SetText("")  -- Очищаем поле при закрытии
+        self.EditBox:SetText("")
     end,
     EditBoxOnEnterPressed = function(self)
         local parent = self:GetParent()
@@ -115,7 +114,6 @@ function DLT.RemoveLootItem(itemID)
     for i, loot in ipairs(lootList) do
         if loot.itemID == itemID then
             table.remove(lootList, i)
-            print("|cFF33FF99DLT|r: удалён предмет " .. itemID)
             found = true
             break
         end
@@ -132,7 +130,7 @@ function DLT.RemoveLootItem(itemID)
             UpdateLootFrame()
         end
     else
-        print("|cFF33FF99DLT|r: предмет не найден в списке.")
+        print("|cFF33FF99DLT|r: item " .. itemID .. " is not in the list.")
     end
 end
 
@@ -141,11 +139,11 @@ end
 -- Показ списка
 function DLT.ListLoot()
     if not lootList or #lootList == 0 then
-        print("|cFF33FF99DLT|r: список пуст.")
+        print("|cFF33FF99DLT|r: list is empty.")
         return
     end
 
-    print("|cFF33FF99DLT|r: предметы в списке для |cFFFFFF00" .. UnitName("player") .. "|r:")
+    print("|cFF33FF99DLT|r: items in list for |cFFFFFF00" .. UnitName("player") .. "|r:")
 
     for i, loot in ipairs(lootList) do
         local name, link = GetItemInfo(loot.itemID)
@@ -163,7 +161,7 @@ function DLT.ClearLootList()
     if DLT_SavedData and DLT_SavedData[key] then
         DLT_SavedData[key] = {}
         lootList = DLT_SavedData[key]
-        print("|cFF33FF99DLT|r: список очищен для персонажа " .. key)
+        print("|cFF33FF99DLT|r: list cleared for " .. key)
     end
 
     if lootFrame and lootFrame:IsShown() then
