@@ -7,4 +7,5 @@
 ## Dependencies: Blizzard_EncounterJournal
 
 DungeonLootTracker.lua
+Commands.lua
 LootData.lua
