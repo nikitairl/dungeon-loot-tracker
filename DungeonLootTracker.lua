@@ -14,9 +14,6 @@ local function DebugPrint(...)
     end
 end
 
-if not LootData then
-    LootData = {} -- на случай, если файл не подключился
-end
 -- ======================
 -- SavedVariables Init
 -- ======================
@@ -24,44 +21,97 @@ local function InitSavedVars()
     if not DLT_SavedData then
         DLT_SavedData = {}
     end
-    lootList = DLT_SavedData
+
+    -- создаём ключ для конкретного персонажа
+    local playerKey = UnitName("player") .. "-" .. GetRealmName()
+
+    -- если данных для этого персонажа нет — инициализируем
+    if not DLT_SavedData[playerKey] then
+        DLT_SavedData[playerKey] = {}
+    end
+
+    -- теперь lootList = данные именно этого персонажа
+    lootList = DLT_SavedData[playerKey]
 end
+
 
 -- ======================
 -- Работа со списком
 -- ======================
 
+-- Добавление предмета
 function DLT.AddLootItem(itemID, dungeon)
-    if not itemID then return end
     for _, loot in ipairs(lootList) do
         if loot.itemID == itemID then
-            DebugPrint("Item already in list:", itemID)
+            print("|cFF33FF99DLT|r: предмет уже есть в списке!")
             return
         end
     end
-    table.insert(lootList, { itemID = itemID, dungeon = dungeon or "Unknown" })
-    DebugPrint("Added loot item:", itemID, dungeon)
+
+    table.insert(lootList, { itemID = itemID, dungeon = dungeon })
+    print("|cFF33FF99DLT|r: добавлен предмет " .. itemID .. " (" .. dungeon .. ")")
     if lootFrame and lootFrame:IsShown() then
         UpdateLootFrame()
     end
 end
 
+-- Удаление предмета
 function DLT.RemoveLootItem(itemID)
+    local found = false
     for i, loot in ipairs(lootList) do
         if loot.itemID == itemID then
             table.remove(lootList, i)
-            DebugPrint("Removed loot item:", itemID)
-            if lootFrame and lootFrame:IsShown() then
-                UpdateLootFrame()
-            end
-            return
+            print("|cFF33FF99DLT|r: удалён предмет " .. itemID)
+            found = true
+            break
+        end
+    end
+
+    -- Удаляем кнопку из UI
+    if lootFrame and lootFrame.scrollChild and lootFrame.scrollChild[itemID] then
+        lootFrame.scrollChild[itemID]:Hide()
+        lootFrame.scrollChild[itemID] = nil
+    end
+
+    if found then
+        if lootFrame and lootFrame:IsShown() then
+            UpdateLootFrame()
+        end
+    else
+        print("|cFF33FF99DLT|r: предмет не найден в списке.")
+    end
+end
+
+
+
+-- Показ списка
+function DLT.ListLoot()
+    if not lootList or #lootList == 0 then
+        print("|cFF33FF99DLT|r: список пуст.")
+        return
+    end
+
+    print("|cFF33FF99DLT|r: предметы в списке для |cFFFFFF00" .. UnitName("player") .. "|r:")
+
+    for i, loot in ipairs(lootList) do
+        local name, link = GetItemInfo(loot.itemID)
+        if link then
+            print(i .. ". " .. link .. " — " .. loot.dungeon)
+        else
+            print(i .. ". " .. loot.itemID .. " — " .. loot.dungeon)
         end
     end
 end
 
 function DLT.ClearLootList()
-    lootList = {}
-    DLT_SavedData = {}
+    -- очищаем только список текущего персонажа
+    local key = UnitName("player") .. "-" .. GetRealmName()
+    if DLT_SavedData and DLT_SavedData[key] then
+        DLT_SavedData[key] = {}
+        lootList = DLT_SavedData[key]
+        print("|cFF33FF99DLT|r: список очищен для персонажа " .. key)
+    end
+
     if lootFrame and lootFrame:IsShown() then
         UpdateLootFrame()
     end
@@ -71,19 +121,20 @@ function UpdateLootFrame()
     if not lootFrame then return end
     if not lootFrame.buttons then lootFrame.buttons = {} end
 
+
     -- Сортируем предметы по dungeon/zone
     local groupedLoot = {}
     for _, loot in ipairs(lootList) do
-        if not groupedLoot[loot.dungeon] then
-            groupedLoot[loot.dungeon] = {}
+        local dungeon = loot.dungeon or "Unknown"
+        if not groupedLoot[dungeon] then
+            groupedLoot[dungeon] = {}
         end
-        table.insert(groupedLoot[loot.dungeon], loot)
+        table.insert(groupedLoot[dungeon], loot)
     end
-
     -- Начальная позиция
     local yOffset = 0
-    local groupSpacing = 18  -- отступ между группами
-    local itemSpacing = 32   -- отступ между предметами
+    local groupSpacing = 18 -- отступ между группами
+    local itemSpacing = 32  -- отступ между предметами
 
     lootFrame.scrollChild:SetHeight(1)
     lootFrame.scrollChild:SetWidth(260)
@@ -97,7 +148,8 @@ function UpdateLootFrame()
         end
         title:SetText(dungeonName)
         title:SetPoint("TOPLEFT", lootFrame.scrollChild, "TOPLEFT", 10, -yOffset)
-        yOffset = yOffset + 28  -- высота заголовка
+        title:Show()
+        yOffset = yOffset + 28 -- высота заголовка
 
         -- Создаем кнопки предметов в группе
         for _, loot in ipairs(items) do
@@ -114,7 +166,17 @@ function UpdateLootFrame()
                 btn.text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
                 btn.text:SetPoint("LEFT", btn.icon, "RIGHT", 5, 0)
                 btn.text:SetJustifyH("LEFT")
-                btn.text:SetWidth(200)
+                btn.text:SetWidth(160)
+
+                -- 🔹 Добавляем крестик справа
+                btn.remove = CreateFrame("Button", nil, btn, "UIPanelCloseButton")
+                btn.remove:SetSize(20, 20)
+                btn.remove:SetPoint("RIGHT", -5, 0)
+                btn.remove:SetScript("OnClick", function()
+                    DLT.RemoveLootItem(loot.itemID)
+                    print("|cFF33FF99DLT|r: removed item " .. loot.itemID)
+                    UpdateLootFrame()
+                end)
 
                 btn:SetScript("OnEnter", function(self)
                     self.icon:SetVertexColor(1, 1, 0)
@@ -168,7 +230,6 @@ function UpdateLootFrame()
     lootFrame.scrollChild:SetHeight(yOffset)
 end
 
-
 local function CreateEJIcon()
     if iconButton or not EncounterJournal then return end
 
@@ -216,12 +277,12 @@ local function CreateEJIcon()
                 lootFrame:SetBackdrop({
                     bgFile = "Interface\\AddOns\\DungeonLootTracker\\textures\\bg3",
                     edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
-                    tile = true,       -- включаем плитку
-                    tileSize = 640,    -- увеличиваем размер плитки, чтобы фон был больше
+                    tile = true,    -- включаем плитку
+                    tileSize = 640, -- увеличиваем размер плитки, чтобы фон был больше
                     edgeSize = 32,
                     insets = { left = 11, right = 12, top = 12, bottom = 11 }
                 })
-
+                lootFrame:SetBackdropColor(0, 0, 0, 0.6)
 
 
                 -- Заголовок
@@ -324,7 +385,6 @@ SlashCmdList["DLT"] = function(msg)
         -- Добавляем предмет в список
         DLT.AddLootItem(itemID, zoneName)
         --- print("|cFF33FF99DLT|r: added item " .. itemID .. " (" .. zoneName .. ")")
-
     elseif cmd == "remove" or cmd == "rm" then
         if rest == "" then
             print("|cFF33FF99DLT|r: usage: /dlt remove <itemLink or itemID>")
@@ -339,25 +399,26 @@ SlashCmdList["DLT"] = function(msg)
         else
             print("|cFF33FF99DLT|r: please provide itemLink or numeric itemID")
         end
-
     elseif cmd == "list" then
-        if not DLT_SavedData or not next(DLT_SavedData) then
-            print("|cFF33FF99DLT|r: list is empty")
+        local playerKey = UnitName("player") .. "-" .. GetRealmName()
+        local list = DLT_SavedData[playerKey]
+        
+        if not list or #list == 0 then
+            print("|cFF33FF99DLT|r: list is empty for character " .. playerKey)
         else
-            print("|cFF33FF99DLT|r: items in list:")
-            for i, loot in ipairs(DLT_SavedData) do
+            print("|cFF33FF99DLT|r: items in list for |cFFFFFF00" .. playerKey .. "|r:")
+            for i, loot in ipairs(list) do
                 local name, link = GetItemInfo(loot.itemID)
                 if link then
-                    print(i .. ":", link, "-", loot.dungeon)
+                    print(i .. ". " .. link .. " — " .. loot.dungeon)
                 else
-                    print(i .. ":", loot.itemID, "-", loot.dungeon)
+                    print(i .. ". " .. loot.itemID .. " — " .. loot.dungeon)
                 end
             end
         end
     elseif cmd == "clear" then
         DLT.ClearLootList()
         print("|cFF33FF99DLT|r: list cleared")
-
     else
         print("|cFF33FF99DLT|r commands:")
         print("  /dlt add <itemLink or itemID>    - добавить предмет")
