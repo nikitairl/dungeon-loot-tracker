@@ -55,6 +55,60 @@ function DLT.AddLootItem(itemID, dungeon)
     end
 end
 
+-- Popup для добавления предмета
+-- Popup для добавления предмета
+-- Popup для добавления предмета
+StaticPopupDialogs["DLT_ADD_ITEM"] = {
+    text = "Enter Item ID or Item Link:",
+    button1 = "Add",
+    button2 = "Cancel",
+    hasEditBox = true,
+    editBoxWidth = 200,
+    OnAccept = function(self)
+        local text = self.EditBox:GetText()
+        if text and text ~= "" then
+            local linkID = text:match("item:(%d+)")
+            local itemID = linkID and tonumber(linkID) or tonumber(text)
+            
+            if itemID then
+                local mapID = LootData[itemID]
+                local zoneName = "Unknown Zone"
+
+                if mapID then
+                    local mapInfo = C_Map.GetMapInfo(mapID)
+                    if mapInfo and mapInfo.name then
+                        zoneName = mapInfo.name
+                    end
+                end
+
+                DLT.AddLootItem(itemID, zoneName)
+                UpdateLootFrame()
+            else
+                print("|cFF33FF99DLT|r: Invalid item ID or link")
+            end
+        end
+    end,
+    OnShow = function(self)
+        self.EditBox:SetFocus()
+        self.EditBox:SetText("")  -- Очищаем поле при открытии
+    end,
+    OnHide = function(self)
+        self.EditBox:SetText("")  -- Очищаем поле при закрытии
+    end,
+    EditBoxOnEnterPressed = function(self)
+        local parent = self:GetParent()
+        StaticPopupDialogs["DLT_ADD_ITEM"].OnAccept(parent)
+        parent:Hide()
+    end,
+    EditBoxOnEscapePressed = function(self)
+        self:GetParent():Hide()
+    end,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    preferredIndex = 3,
+}
+
 -- Удаление предмета
 function DLT.RemoveLootItem(itemID)
     local found = false
@@ -319,6 +373,16 @@ local function CreateEJIcon()
                 local closeButton = CreateFrame("Button", nil, lootFrame, "UIPanelCloseButton")
                 closeButton:SetPoint("TOPRIGHT", lootFrame, "TOPRIGHT", -5, -5)
                 closeButton:SetScript("OnClick", function() lootFrame:Hide() end)
+
+                -- Кнопка добавления
+                lootFrame.addButton = CreateFrame("Button", nil, lootFrame, "UIPanelButtonTemplate")
+                lootFrame.addButton:SetSize(120, 25)
+                lootFrame.addButton:SetPoint("BOTTOM", lootFrame, "BOTTOM", 0, 10)
+                lootFrame.addButton:SetText("Add Item")
+                lootFrame.addButton:SetScript("OnClick", function()
+    -- Открываем диалог ввода предмета
+    StaticPopup_Show("DLT_ADD_ITEM")
+end)
             end
 
             UpdateLootFrame()
@@ -363,8 +427,49 @@ end
 SLASH_DLT1 = "/dlt"
 
 SlashCmdList["DLT"] = function(msg)
-    local cmd, rest = msg:match("^(%S*)%s*(.-)$")
-    cmd = cmd:lower()
+    -- Функция для парсинга itemID
+    local function ParseItemID(input)
+        if not input or input == "" then return nil end
+        local linkID = input:match("item:(%d+)")
+        return linkID and tonumber(linkID) or tonumber(input)
+    end
+
+    -- Функция для проверки, есть ли предмет в списке
+    local function IsItemInList(itemID)
+        if not lootList then return false end
+        for _, loot in ipairs(lootList) do
+            if loot.itemID == itemID then
+                return true
+            end
+        end
+        return false
+    end
+
+    -- Функция для получения названия подземелья
+    local function GetZoneName(itemID)
+        local mapID = LootData[itemID]
+        local zoneName = "Unknown Zone"
+
+        if mapID then
+            local mapInfo = C_Map.GetMapInfo(mapID)
+            if mapInfo and mapInfo.name then
+                zoneName = mapInfo.name
+            end
+        end
+        return zoneName
+    end
+
+    -- Разбираем ввод
+    local words = {}
+    for word in msg:gmatch("%S+") do
+        table.insert(words, word)
+    end
+
+    local cmd = words[1] and words[1]:lower() or ""
+    local rest = ""
+    if #words > 1 then
+        rest = table.concat(words, " ", 2)
+    end
 
     if cmd == "add" then
         if rest == "" then
@@ -372,49 +477,28 @@ SlashCmdList["DLT"] = function(msg)
             return
         end
 
-        -- Парсим линк или ID
-        local linkID = rest:match("item:(%d+)")
-        local itemID = linkID and tonumber(linkID) or tonumber(rest)
-
+        local itemID = ParseItemID(rest)
         if not itemID then
             print("|cFF33FF99DLT|r: please provide a valid itemLink or numeric itemID")
             return
         end
 
-        -- Получаем MapID из LootData
-        local mapID = LootData[itemID]
-        local zoneName = "Unknown Zone"
-
-        if mapID then
-            -- Пробуем получить информацию о карте
-            local mapInfo = C_Map.GetMapInfo(mapID)
-            --- print("|cFF33FF99DLT DEBUG|r: mapInfo for itemID " .. itemID .. " = " .. tostring(mapInfo))
-            if mapInfo and mapInfo.name then
-                zoneName = mapInfo.name
-            else
-                print("|cFF33FF99DLT DEBUG|r: mapInfo not found, using Unknown Zone")
-            end
-        else
-            print("|cFF33FF99DLT DEBUG|r: MapID for itemID " .. itemID .. " not found in LootData.lua")
-        end
-
-        -- Добавляем предмет в список
+        local zoneName = GetZoneName(itemID)
         DLT.AddLootItem(itemID, zoneName)
-        --- print("|cFF33FF99DLT|r: added item " .. itemID .. " (" .. zoneName .. ")")
+
     elseif cmd == "remove" or cmd == "rm" then
         if rest == "" then
             print("|cFF33FF99DLT|r: usage: /dlt remove <itemLink or itemID>")
             return
         end
 
-        local linkID = rest:match("item:(%d+)")
-        local itemID = linkID and tonumber(linkID) or tonumber(rest)
+        local itemID = ParseItemID(rest)
         if itemID then
             DLT.RemoveLootItem(itemID)
-            print("|cFF33FF99DLT|r: removed item " .. itemID)
         else
             print("|cFF33FF99DLT|r: please provide itemLink or numeric itemID")
         end
+
     elseif cmd == "list" then
         local playerKey = UnitName("player") .. "-" .. GetRealmName()
         local list = DLT_SavedData[playerKey]
@@ -432,14 +516,34 @@ SlashCmdList["DLT"] = function(msg)
                 end
             end
         end
+
     elseif cmd == "clear" then
         DLT.ClearLootList()
         print("|cFF33FF99DLT|r: list cleared")
+
     else
-        print("|cFF33FF99DLT|r commands:")
-        print("  /dlt add <itemLink or itemID>    - добавить предмет")
-        print("  /dlt remove <itemLink or itemID> - удалить предмет")
-        print("  /dlt list                        - показать список")
-        print("  /dlt clear                       - очистить список")
+        -- Toggle режим - либо команда не распознана, либо это предмет
+        local itemInput = msg
+        if itemInput == "" then
+            print("|cFF33FF99DLT|r: usage: /dlt <itemLink or itemID> - toggle item")
+            return
+        end
+
+        local itemID = ParseItemID(itemInput)
+        if not itemID then
+            print("|cFF33FF99DLT|r: please provide a valid itemLink or numeric itemID")
+            return
+        end
+
+        if IsItemInList(itemID) then
+            -- Удаляем, если уже есть
+            DLT.RemoveLootItem(itemID)
+            print("|cFF33FF99DLT|r: removed item " .. itemID)
+        else
+            -- Добавляем, если нет
+            local zoneName = GetZoneName(itemID)
+            DLT.AddLootItem(itemID, zoneName)
+            print("|cFF33FF99DLT|r: added item " .. itemID .. " (" .. zoneName .. ")")
+        end
     end
 end
