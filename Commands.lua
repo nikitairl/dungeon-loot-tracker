@@ -100,7 +100,7 @@ SlashCmdList["DLT"] = function(msg)
         print("|cFF33FF99DLT|r: list cleared")
 
     elseif cmd == "info" or cmd == "help" then
-        print("|cFF33FF99Dungeon Loot Tracker|r - Help")
+        print("|cFF33FF99Desired Loot Tracker|r - Help")
         print(" ")
         print("|cFFFFD700Available Commands:|r")
         print("  |cFF33FF99/dlt <item>|r          - Toggle command (add/remove)")

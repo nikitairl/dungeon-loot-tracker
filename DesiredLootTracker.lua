@@ -1,6 +1,3 @@
--- DungeonLootTracker.lua
--- ## SavedVariables: DLT_SavedData
-
 DLT = DLT or {}
 DLT_SavedData = DLT_SavedData or {}
 local lootFrame

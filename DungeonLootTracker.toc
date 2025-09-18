@@ -1,11 +1,11 @@
 ## Interface: 100207
-## Title: Dungeon Loot Tracker
+## Title: Desired Loot Tracker
 ## Notes: Tracks desired loot items from dungeons
 ## Author: Nikita
 ## Version: 0.1
 ## SavedVariables: DLT_SavedData
 ## Dependencies: Blizzard_EncounterJournal
 
-DungeonLootTracker.lua
+DesiredLootTracker.lua
 Commands.lua
 LootData.lua
