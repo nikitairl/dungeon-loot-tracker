@@ -201,7 +201,7 @@ function UpdateLootFrame()
     -- Начальная позиция
     local yOffset = 0
     local groupSpacing = 24 -- отступ между группами
-    local itemSpacing = 32  -- отступ между предметами
+    local itemSpacing = 42  -- отступ между предметами
 
     lootFrame.scrollChild:SetHeight(1)
     lootFrame.scrollChild:SetWidth(260)
@@ -221,38 +221,73 @@ function UpdateLootFrame()
         -- Создаем кнопки предметов в группе
         for _, loot in ipairs(items) do
             local btn = lootFrame.scrollChild[loot.itemID]
+            -- Цвет фона за предметом
+            local btnBackgroundColor = {0.9, 0.85, 0.7, 0.3}
             if not btn then
                 btn = CreateFrame("Button", nil, lootFrame.scrollChild)
-                btn:SetSize(320, 30)
+                btn:SetSize(320, 36)  -- Увеличил высоту
                 btn:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
-
+                
+                -- Фон кнопки
+                btn.bg = btn:CreateTexture(nil, "BACKGROUND")
+                btn.bg:SetTexture("Interface\\Tooltips\\UI-Tooltip-Background")
+                btn.bg:SetVertexColor(unpack(btnBackgroundColor))
+                btn.bg:SetAllPoints()
+                
+                -- Граница кнопки
+                btn.border = btn:CreateTexture(nil, "BORDER")
+                btn.border:SetTexture("Interface\\CastingBar\\UI-CastingBar-Border")
+                btn.border:SetSize(32, 32)
+                btn.border:SetPoint("LEFT", 4, 0)
+                btn.border:SetVertexColor(0.8, 0.8, 0.8, 0.8)
+                
                 btn.icon = btn:CreateTexture(nil, "ARTWORK")
                 btn.icon:SetSize(30, 30)
                 btn.icon:SetPoint("LEFT", 5, 0)
 
                 btn.text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-                btn.text:SetPoint("LEFT", btn.icon, "RIGHT", 5, 0)
+                btn.text:SetPoint("LEFT", btn.icon, "RIGHT", 10, 0)  -- Увеличил отступ
                 btn.text:SetJustifyH("LEFT")
-                btn.text:SetWidth(160)
+                btn.text:SetWidth(200)  -- Увеличил ширину
+                btn.text:SetFontObject("GameFontNormal")  -- Явно указываем шрифт
 
-                -- 🔹 Добавляем крестик справа
-                btn.remove = CreateFrame("Button", nil, btn, "UIPanelCloseButton")
-                btn.remove:SetSize(20, 20)
-                btn.remove:SetPoint("RIGHT", -5, 0)
+                -- 🔹 Добавляем крестик справа (улучшенный)
+                btn.remove = CreateFrame("Button", nil, btn)
+                btn.remove:SetSize(24, 24)
+                btn.remove:SetPoint("RIGHT", -40, 0)
+                btn.remove:SetNormalTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Up")
+                btn.remove:SetPushedTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Down")
+                btn.remove:SetHighlightTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Highlight")
                 btn.remove:SetScript("OnClick", function()
                     DLT.RemoveLootItem(loot.itemID)
                     print("|cFF33FF99DLT|r: removed item " .. loot.itemID)
                     UpdateLootFrame()
                 end)
+                
+                -- Анимация при наведении на крестик
+                btn.remove:SetScript("OnEnter", function(self)
+                    self:SetAlpha(1)
+                    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                    GameTooltip:SetText("Remove Item")
+                    GameTooltip:Show()
+                end)
+                btn.remove:SetScript("OnLeave", function(self)
+                    self:SetAlpha(0.7)
+                    GameTooltip:Hide()
+                end)
+                btn.remove:SetAlpha(0.7)
 
+                -- Анимация при наведении на кнопку
                 btn:SetScript("OnEnter", function(self)
                     self.icon:SetVertexColor(1, 1, 0)
+                    self.bg:SetVertexColor(0.25, 0.25, 0.25, 0.9)
                     GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
                     GameTooltip:SetItemByID(loot.itemID)
                     GameTooltip:Show()
                 end)
                 btn:SetScript("OnLeave", function(self)
                     self.icon:SetVertexColor(1, 1, 1)
+                    self.bg:SetVertexColor(unpack(btnBackgroundColor))
                     GameTooltip:Hide()
                 end)
 
@@ -351,8 +386,9 @@ local function CreateEJIcon()
                 })
                 lootFrame.overlay = lootFrame:CreateTexture(nil, "OVERLAY")
                 lootFrame.overlay:SetTexture("Interface\\ChatFrame\\ChatFrameBackground")
-                lootFrame.overlay:SetVertexColor(0, 0, 0, 0.2) -- черный с 40% прозрачностью
-                lootFrame.overlay:SetAllPoints()
+                lootFrame.overlay:SetVertexColor(0, 0, 0, 0.75) -- черный с 40% прозрачностью
+                lootFrame.overlay:SetPoint("TOPLEFT", lootFrame, "TOPLEFT", 11, -12)  -- отступы как в insets
+                lootFrame.overlay:SetPoint("BOTTOMRIGHT", lootFrame, "BOTTOMRIGHT", -12, 11)
                 ---lootFrame:SetBackdropColor(0, 0, 0, 0.6)
 
                 -- Создаем фрейм для заголовка с фоном
@@ -365,11 +401,20 @@ local function CreateEJIcon()
                 lootFrame.titleFrame.bg:SetTexture("Interface\\ChatFrame\\ChatFrameBackground")
                 lootFrame.titleFrame.bg:SetVertexColor(0, 0, 0, 0.7)
                 lootFrame.titleFrame.bg:SetAllPoints()
+                -- Рамка снизу (линия)
+                -- Рамка снизу (линия) - без тайлинга
+                lootFrame.titleFrame.bottomBorder = lootFrame.titleFrame:CreateTexture(nil, "BORDER")
+                lootFrame.titleFrame.bottomBorder:SetTexture("Interface\\ChatFrame\\ChatFrameBackground")
+                lootFrame.titleFrame.bottomBorder:SetVertexColor(0.8, 0.8, 0.8, 0.4)
+                lootFrame.titleFrame.bottomBorder:SetHeight(2)
+                lootFrame.titleFrame.bottomBorder:SetPoint("BOTTOMLEFT", lootFrame.titleFrame, "BOTTOMLEFT", 0, 0)
+                lootFrame.titleFrame.bottomBorder:SetPoint("BOTTOMRIGHT", lootFrame.titleFrame, "BOTTOMRIGHT", 0, 0)
+                lootFrame.titleFrame.bottomBorder:SetTexCoord(0, 1, 0, 1)  -- Отключаем тайлинг
 
                 -- Текст заголовка
                 lootFrame.title = lootFrame.titleFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
                 lootFrame.title:SetPoint("CENTER")
-                lootFrame.title:SetText("Good luck, Champion")
+                lootFrame.title:SetText("Good luck")
 
                 -- ScrollFrame
                 lootFrame.scrollFrame = CreateFrame("ScrollFrame", nil, lootFrame, "UIPanelScrollFrameTemplate")
