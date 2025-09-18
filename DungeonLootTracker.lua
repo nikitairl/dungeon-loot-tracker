@@ -352,7 +352,7 @@ local function CreateEJIcon()
     iconButton:SetScript("OnEnter", function(self)
         self:GetNormalTexture():SetVertexColor(1, 1, 0)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetText("Desired Loot Tracker")
+        GameTooltip:SetText("/dlt")
         GameTooltip:Show()
     end)
     iconButton:SetScript("OnLeave", function(self)
@@ -447,8 +447,6 @@ end)
         end
     end)
 end
-
-
 
 -- ======================
 -- События
