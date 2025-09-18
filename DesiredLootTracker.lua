@@ -374,7 +374,7 @@ local function CreateEJIcon()
                 end
 
                 lootFrame:SetBackdrop({
-                    bgFile = "Interface\\AddOns\\DungeonLootTracker\\textures\\bg3",
+                    bgFile = "Interface\\AddOns\\DesiredLootTracker\\textures\\bg3",
                     edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
                     tile = true,    -- включаем плитку
                     tileSize = 640, -- увеличиваем размер плитки, чтобы фон был больше

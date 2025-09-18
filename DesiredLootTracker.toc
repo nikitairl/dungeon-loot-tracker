@@ -1,8 +1,8 @@
-## Interface: 100207
+## Interface: 110200
 ## Title: Desired Loot Tracker
 ## Notes: Tracks desired loot items from dungeons
 ## Author: Nikita
-## Version: 0.1
+## Version: 1.0
 ## SavedVariables: DLT_SavedData
 ## Dependencies: Blizzard_EncounterJournal
 
